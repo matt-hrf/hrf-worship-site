@@ -1,5 +1,26 @@
 <template>
   <div>
+
+    <ul>
+      <li style="display: inline-block;">
+        <router-link :to="{ name: 'SongPost', params: { id:'last-week' } }">
+          Last Week
+        </router-link>
+      </li>
+      &nbsp;|&nbsp;
+      <li style="display: inline-block;">
+        <router-link :to="{ name: 'SongPost', params: { id:'this-week' } }">
+          This Week
+        </router-link>
+      </li>
+      &nbsp;|&nbsp;
+      <li style="display: inline-block;">
+        <router-link :to="{ name: 'SongPost', params: { id:'next-week' } }">
+          Next Week
+        </router-link>
+      </li>
+    </ul>
+
     <iframe v-if="songData.fields" width="560" height="315" v-bind:src="'https://www.youtube.com/embed/videoseries?list=' + songData.fields.YTPlaylistID" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
     <h1 v-if="songData.fields" class="title">
@@ -29,6 +50,9 @@
         </span>
       </li>
     </ul>
+
+    <p>Tags: </p>
+
     <br><br><br><br>
     songData: {{songData}}
     <br><br>
@@ -44,6 +68,8 @@
 
 <script>
 var Airtable = require('airtable')
+var base = new Airtable({apiKey: 'keymkmleyzMTvKqtQ'}).base('appbKUM9ff992L98h')
+
 var moment = require('moment')
 
 export default {
@@ -81,98 +107,104 @@ export default {
       // console.log('new date: ' + new Date(sanitizedString))
       // console.log('new date moment: ' + moment(new Date(sanitizedString)))
       return moment(new Date(sanitizedString)).startOf('day')
-    }
-  },
-  mounted () {
-    var sundayNum = 0 // for Sunday
-    // var today = moment().isoWeekday()
-    // console.log('this.getNextSundayDate(sundayNum): ' + this.getNextSundayDate(sundayNum))
-    // console.log('weeee: ' + this.getDateFromRouteParam(this.$route.params.id))
-    var dateToRetrieve = null
+    },
+    getDateToRetrieve: function (id) {
+      var date = null
+      if (id === 'next-week') {
+        // console.log('id: /songs-of-the-week/next-week')
+        date = this.dates.nextWeek.unix
+      } else if (id === 'this-week') {
+        // console.log('id: /songs-of-the-week/this-week')
+        date = this.dates.thisWeek.unix
+      } else if (id === 'last-week') {
+        // console.log('id: /songs-of-the-week/last-week')
+        date = this.dates.lastWeek.unix
+      } else {
+        // console.log('id: /songs-of-the-week/june-17-2018')
+        date = this.dates.urlWeek.unix
+      }
 
-    this.dates.nextWeek = {}
-    this.dates.nextWeek.date = this.getNextSundayDate(sundayNum)
-    this.dates.nextWeek.unix = Number(this.dates.nextWeek.date)
+      return date
+    },
+    setDateValutes: function (id, sundayNumber) {
+      this.dates.nextWeek = {}
+      this.dates.nextWeek.date = this.getNextSundayDate(sundayNumber)
+      this.dates.nextWeek.unix = Number(this.dates.nextWeek.date)
 
-    this.dates.thisWeek = {}
-    this.dates.thisWeek.date = this.getThisSundayDate(sundayNum)
-    this.dates.thisWeek.unix = Number(this.dates.thisWeek.date)
+      this.dates.thisWeek = {}
+      this.dates.thisWeek.date = this.getThisSundayDate(sundayNumber)
+      this.dates.thisWeek.unix = Number(this.dates.thisWeek.date)
 
-    this.dates.lastWeek = {}
-    this.dates.lastWeek.date = this.getLastSundayDate(sundayNum)
-    this.dates.lastWeek.unix = Number(this.dates.lastWeek.date)
+      this.dates.lastWeek = {}
+      this.dates.lastWeek.date = this.getLastSundayDate(sundayNumber)
+      this.dates.lastWeek.unix = Number(this.dates.lastWeek.date)
 
-    this.dates.urlWeek = {}
-    this.dates.urlWeek.date = this.getDateFromRouteParam(this.$route.params.id)
-    this.dates.urlWeek.unix = Number(this.dates.urlWeek.date)
-
-    if (this.$route.params.id === 'next-week') {
-      // console.log('id: /songs-of-the-week/next-week')
-      dateToRetrieve = this.dates.nextWeek.unix
-    } else if (this.$route.params.id === 'this-week') {
-      // console.log('id: /songs-of-the-week/this-week')
-      dateToRetrieve = this.dates.thisWeek.unix
-    } else if (this.$route.params.id === 'last-week') {
-      // console.log('id: /songs-of-the-week/last-week')
-      dateToRetrieve = this.dates.lastWeek.unix
-    } else {
-      // console.log('id: /songs-of-the-week/june-17-2018')
-      dateToRetrieve = this.dates.urlWeek.unix
-    }
-    // console.log('dateToRetrieve: ' + dateToRetrieve)
-    // var dateObj = new Date(dateToRetrieve)
-    // var retDate = moment(dateObj).format('MMMM DD, YYYY')
-    // console.log('retDate: ' + retDate + '  --  dateObj: ' + dateObj)
-
-    var base = new Airtable({apiKey: 'keymkmleyzMTvKqtQ'}).base('appbKUM9ff992L98h')
-    var scope = this
-    var propsObj = {
-      view: 'Grid view',
-      filterByFormula: 'FIND(LOWER("' + dateToRetrieve + '"), LOWER({UnixDate}))'
-    }
-    console.log(propsObj.filterByFormula)
-    base('Services').select(propsObj).eachPage(
-      function page (records, fetchNextPage) {
-        records.forEach(function (record) {
-          console.log('Retrieved', record.get('Name'))
-          scope.songData = record
-          if (scope.songData.fields.Arrangements) {
-            scope.songData.fields.Arrangements.forEach(function (record) {
-              console.log('arrangements: ' + record + ', ' + scope)
-              base('Arrangements').find(record, function (err, record) {
-                if (err) {
-                  console.error(err)
-                  return
-                }
-                console.log('arrangement: ' + record.id)
-                scope.songs[record.id] = record
-                var newObj = {}
-                var oldObj = scope.songs
-                scope.songs = {}
-                scope.songs = Object.assign(oldObj, newObj)
-              })
-            })
-          }
-        })
-        fetchNextPage()
-      }, function done (err) {
+      this.dates.urlWeek = {}
+      this.dates.urlWeek.date = this.getDateFromRouteParam(id)
+      this.dates.urlWeek.unix = Number(this.dates.urlWeek.date)
+    },
+    getSongArrangement: function (record, scope) {
+      base('Arrangements').find(record, function (err, record) {
         if (err) {
           console.error(err)
+          return
         }
+        // console.log('arrangement: ' + record.id)
+        scope.songs[record.id] = record
+        var newObj = {}
+        var oldObj = scope.songs
+        scope.songs = {}
+        scope.songs = Object.assign(oldObj, newObj)
       })
-    /* base('Services').find(propsObj, function (err, record) {
-      if (err) {
-        console.error(err)
-        return
-      }
-      console.log(record)
-      scope.songData = record
-    }) */
+    },
+    getService: function (scope, propsObj) {
+
+      base('Services').select(propsObj).eachPage(
+        function page (records, fetchNextPage) {
+          records.forEach(function (record) {
+            // console.log('Retrieved', record.get('Name'))
+            scope.songData = record
+            if (scope.songData.fields.Arrangements) {
+              scope.songData.fields.Arrangements.forEach(function (record) {
+                // console.log('arrangements: ' + record + ', ' + scope)
+                scope.getSongArrangement(record, scope)
+              })
+            }
+          })
+          fetchNextPage()
+        }, function done (err) {
+          if (err) {
+            console.error(err)
+          }
+        })
+    }
+  },
+  beforeRouteUpdate (to, from, next) {
+
+    // var scope = this
+    var propsObj = {
+      view: 'Grid view',
+      filterByFormula: 'FIND(LOWER("' + this.getDateToRetrieve(to.params.id) + '"), LOWER({UnixDate}))'
+    }
+    // console.log(propsObj.filterByFormula)
+    this.getService(this, propsObj)
+    console.log('DONE')
+    next()
+  },
+  mounted () {
+    this.setDateValutes(this.$route.params.id, 0)
+
+    // var base = new Airtable({apiKey: 'keymkmleyzMTvKqtQ'}).base('appbKUM9ff992L98h')
+    // var scope = this
+    var propsObj = {
+      view: 'Grid view',
+      filterByFormula: 'FIND(LOWER("' + this.getDateToRetrieve(this.$route.params.id) + '"), LOWER({UnixDate}))'
+    }
+    // console.log(propsObj.filterByFormula)
+    this.getService(this, propsObj)
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-
-</style>
+<style scoped></style>

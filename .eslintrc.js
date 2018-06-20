@@ -24,6 +24,7 @@ module.exports = {
     // allow async-await
     'generator-star-spacing': 'off',
     'no-trailing-spaces': 'off',
+    'padded-blocks': 'off',
     // allow debugger during development
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
   }
