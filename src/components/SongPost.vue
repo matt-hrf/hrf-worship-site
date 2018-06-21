@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <ul>
       <li style="display: inline-block;">
         <router-link :to="{ name: 'SongPost', params: { id:'last-week' } }">
@@ -21,18 +20,19 @@
       </li>
     </ul>
 
-    <iframe v-if="songData.fields" width="560" height="315" v-bind:src="'https://www.youtube.com/embed/videoseries?list=' + songData.fields.YTPlaylistID" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <!-- <iframe v-if="songData.fields" width="560" height="315" v-bind:src="'https://www.youtube.com/embed/videoseries?list=' + songData.fields.YTPlaylistID" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
     <h1 v-if="songData.fields" class="title">
       <span v-html="$options.filters.formatDate(songData.fields.Name)"></span>
-    </h1>
+    </h1> -->
 
+    <p>Description for the week.</p>
     <p v-if="songData.fields">
       <a v-bind:href="'https://www.youtube.com/playlist?list=' + songData.fields.YTPlaylistID" target="_blank">YouTube playlist</a>
-        |
-      <a href="#">Spotify playlist</a>
+        <!-- |
+      <a href="#">Spotify playlist</a> -->
     </p>
-
+    <p>Tags (themes): </p>
     <br>
 
     <ul v-if="songData.fields">
@@ -51,26 +51,23 @@
       </li>
     </ul>
 
-    <p>Tags: </p>
-
+    <br><br><br><br>
+    services: {{services}}
+    <br><br><br><br>
+    arrangements: {{arrangements}}
     <br><br><br><br>
     songData: {{songData}}
     <br><br>
-    Weeks: <!-- {{dates}} -->
-    <ul>
-      <li>This week: {{dates.thisWeek}}</li>
-      <li>Last week: {{dates.lastWeek}}</li>
-      <li>Next week: {{dates.nextWeek}}</li>
-      <li>URL Date: {{dates.urlWeek}}</li>
-    </ul>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 var Airtable = require('airtable')
 var base = new Airtable({apiKey: 'keymkmleyzMTvKqtQ'}).base('appbKUM9ff992L98h')
-
 var moment = require('moment')
+
 
 export default {
   name: 'SongPost',
@@ -78,7 +75,6 @@ export default {
   data () {
     return {
       songData: {},
-      dates: {},
       songs: {}
     }
   },
@@ -92,56 +88,33 @@ export default {
       return retDate
     }
   },
+  computed: {
+    ...mapGetters({
+      dateLastSunday: 'dateLastSunday',
+      dateThisSunday: 'dateThisSunday',
+      dateNextSunday: 'dateNextSunday',
+      dateCURLSunday: 'dateCURLSunday',
+      services: 'services',
+      arrangements: 'arrangements'
+    })
+  },
   methods: {
-    getNextSundayDate: function (sunday) {
-      return moment().startOf('day').add(1, 'weeks').isoWeekday(sunday)
-    },
-    getLastSundayDate: function (sunday) {
-      return moment().startOf('day').subtract(1, 'week').isoWeekday(sunday)
-    },
-    getThisSundayDate: function (sunday) {
-      return moment().startOf('day').day(sunday)
-    },
-    getDateFromRouteParam: function (urlString) {
-      var sanitizedString = urlString.replace('-', ' ')
-      // console.log('new date: ' + new Date(sanitizedString))
-      // console.log('new date moment: ' + moment(new Date(sanitizedString)))
-      return moment(new Date(sanitizedString)).startOf('day')
-    },
     getDateToRetrieve: function (id) {
       var date = null
       if (id === 'next-week') {
         // console.log('id: /songs-of-the-week/next-week')
-        date = this.dates.nextWeek.unix
+        date = this.dateNextSunday
       } else if (id === 'this-week') {
         // console.log('id: /songs-of-the-week/this-week')
-        date = this.dates.thisWeek.unix
+        date = this.dateThisSunday
       } else if (id === 'last-week') {
         // console.log('id: /songs-of-the-week/last-week')
-        date = this.dates.lastWeek.unix
+        date = this.dateLastSunday
       } else {
         // console.log('id: /songs-of-the-week/june-17-2018')
-        date = this.dates.urlWeek.unix
+        date = this.dateCURLSunday
       }
-
       return date
-    },
-    setDateValutes: function (id, sundayNumber) {
-      this.dates.nextWeek = {}
-      this.dates.nextWeek.date = this.getNextSundayDate(sundayNumber)
-      this.dates.nextWeek.unix = Number(this.dates.nextWeek.date)
-
-      this.dates.thisWeek = {}
-      this.dates.thisWeek.date = this.getThisSundayDate(sundayNumber)
-      this.dates.thisWeek.unix = Number(this.dates.thisWeek.date)
-
-      this.dates.lastWeek = {}
-      this.dates.lastWeek.date = this.getLastSundayDate(sundayNumber)
-      this.dates.lastWeek.unix = Number(this.dates.lastWeek.date)
-
-      this.dates.urlWeek = {}
-      this.dates.urlWeek.date = this.getDateFromRouteParam(id)
-      this.dates.urlWeek.unix = Number(this.dates.urlWeek.date)
     },
     getSongArrangement: function (record, scope) {
       base('Arrangements').find(record, function (err, record) {
@@ -181,27 +154,23 @@ export default {
   },
   beforeRouteUpdate (to, from, next) {
 
-    // var scope = this
     var propsObj = {
       view: 'Grid view',
       filterByFormula: 'FIND(LOWER("' + this.getDateToRetrieve(to.params.id) + '"), LOWER({UnixDate}))'
     }
-    // console.log(propsObj.filterByFormula)
     this.getService(this, propsObj)
-    console.log('DONE')
+    this.$store.dispatch('setCurrentPagePost')
     next()
+    this.$store.dispatch('setCurrentSongPostDate', { postId: this.$route.params.id })
   },
   mounted () {
-    this.setDateValutes(this.$route.params.id, 0)
-
-    // var base = new Airtable({apiKey: 'keymkmleyzMTvKqtQ'}).base('appbKUM9ff992L98h')
-    // var scope = this
+    this.$store.dispatch('setCurrentSongPostDate', { postId: this.$route.params.id })
     var propsObj = {
       view: 'Grid view',
       filterByFormula: 'FIND(LOWER("' + this.getDateToRetrieve(this.$route.params.id) + '"), LOWER({UnixDate}))'
     }
-    // console.log(propsObj.filterByFormula)
     this.getService(this, propsObj)
+    this.$store.dispatch('setCurrentPagePost')
   }
 }
 </script>

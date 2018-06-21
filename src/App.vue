@@ -7,12 +7,12 @@
 
 <script>
 export default {
-  name: 'App'
+  name: 'App',
+  created () {
+    console.log('App created!')
+    this.$store.dispatch('initialize')
+  }
 }
 </script>
 
-<style>
-#app {
-
-}
-</style>
+<style></style>
