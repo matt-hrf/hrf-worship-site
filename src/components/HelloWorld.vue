@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>{{ msg }}</h1>
-    <router-link :to="{ name: 'SongPost', params: {} }">Songs of the Week</router-link>
+    <router-link :to="{ name: 'SongPost', params: { id: 'next-week' } }">Songs of the Week</router-link>
   </div>
 </template>
 
