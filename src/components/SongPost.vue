@@ -27,45 +27,42 @@
     </h1> -->
 
     <p>Description for the week.</p>
-    <p v-if="songData.fields">
-      <a v-bind:href="'https://www.youtube.com/playlist?list=' + songData.fields.YTPlaylistID" target="_blank">YouTube playlist</a>
+    <p v-if="services[Number(songsOfTheWeekDate)]">
+      <a v-bind:href="'https://www.youtube.com/playlist?list=' + services[Number(songsOfTheWeekDate)].fields.YTPlaylistID" target="_blank">YouTube playlist</a>
         <!-- |
       <a href="#">Spotify playlist</a> -->
     </p>
     <p>Tags (themes): </p>
     <br>
 
-    <ul v-if="songData.fields">
+    <ul v-if="services[Number(songsOfTheWeekDate)]">
       <li
-          v-for="(value, key) in songData.fields.Arrangements"
+          v-for="(value, key) in services[Number(songsOfTheWeekDate)].fields.Arrangements"
           v-bind:key="key"
           style="padding-bottom:16px;"
       >
-        <span v-if="songs[value]">
-          <span>{{key+1}}. {{songs[value].fields.SongName[0]}}</span>
+        <span v-if="arrangements[value]">
+          <span>{{key+1}}. {{arrangements[value].fields.SongName[0]}}</span>
           <br>
-          <span v-if="songs[value].fields.Video">
-            <a v-bind:href="songs[value].fields.Video" target="_blank">YouTube</a>
+          <span v-if="arrangements[value].fields.Video">
+            <a v-bind:href="arrangements[value].fields.Video" target="_blank">YouTube</a>
           </span>
         </span>
       </li>
     </ul>
 
-    <br><br><br><br>
-    services: {{services}}
-    <br><br><br><br>
-    arrangements: {{arrangements}}
-    <br><br><br><br>
-    songData: {{songData}}
     <br><br>
+    {{Number(songsOfTheWeekDate)}}
+    <br><br>
+    Wee: {{services[Number(songsOfTheWeekDate)]}}
+    <br><br><br>
+
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 
-var Airtable = require('airtable')
-var base = new Airtable({apiKey: 'keymkmleyzMTvKqtQ'}).base('appbKUM9ff992L98h')
 var moment = require('moment')
 
 
@@ -74,8 +71,6 @@ export default {
 
   data () {
     return {
-      songData: {},
-      songs: {}
     }
   },
   filters: {
@@ -95,82 +90,21 @@ export default {
       dateNextSunday: 'dateNextSunday',
       dateCURLSunday: 'dateCURLSunday',
       services: 'services',
-      arrangements: 'arrangements'
+      arrangements: 'arrangements',
+      songsOfTheWeekDate: 'songsOfTheWeekDate'
     })
   },
   methods: {
     getDateToRetrieve: function (id) {
-      var date = null
-      if (id === 'next-week') {
-        // console.log('id: /songs-of-the-week/next-week')
-        date = this.dateNextSunday
-      } else if (id === 'this-week') {
-        // console.log('id: /songs-of-the-week/this-week')
-        date = this.dateThisSunday
-      } else if (id === 'last-week') {
-        // console.log('id: /songs-of-the-week/last-week')
-        date = this.dateLastSunday
-      } else {
-        // console.log('id: /songs-of-the-week/june-17-2018')
-        date = this.dateCURLSunday
-      }
-      return date
-    },
-    getSongArrangement: function (record, scope) {
-      base('Arrangements').find(record, function (err, record) {
-        if (err) {
-          console.error(err)
-          return
-        }
-        // console.log('arrangement: ' + record.id)
-        scope.songs[record.id] = record
-        var newObj = {}
-        var oldObj = scope.songs
-        scope.songs = {}
-        scope.songs = Object.assign(oldObj, newObj)
-      })
-    },
-    getService: function (scope, propsObj) {
-
-      base('Services').select(propsObj).eachPage(
-        function page (records, fetchNextPage) {
-          records.forEach(function (record) {
-            // console.log('Retrieved', record.get('Name'))
-            scope.songData = record
-            if (scope.songData.fields.Arrangements) {
-              scope.songData.fields.Arrangements.forEach(function (record) {
-                // console.log('arrangements: ' + record + ', ' + scope)
-                scope.getSongArrangement(record, scope)
-              })
-            }
-          })
-          fetchNextPage()
-        }, function done (err) {
-          if (err) {
-            console.error(err)
-          }
-        })
     }
   },
   beforeRouteUpdate (to, from, next) {
 
-    var propsObj = {
-      view: 'Grid view',
-      filterByFormula: 'FIND(LOWER("' + this.getDateToRetrieve(to.params.id) + '"), LOWER({UnixDate}))'
-    }
-    this.getService(this, propsObj)
-    this.$store.dispatch('setCurrentPagePost')
     next()
-    this.$store.dispatch('setCurrentSongPostDate', { postId: this.$route.params.id })
+    this.$store.dispatch('setSongsOfTheWeekPage', { page: 'songs-of-the-week', id: this.$route.params.id })
   },
   mounted () {
-    this.$store.dispatch('setCurrentSongPostDate', { postId: this.$route.params.id })
-    var propsObj = {
-      view: 'Grid view',
-      filterByFormula: 'FIND(LOWER("' + this.getDateToRetrieve(this.$route.params.id) + '"), LOWER({UnixDate}))'
-    }
-    this.getService(this, propsObj)
-    this.$store.dispatch('setCurrentPagePost')
+    this.$store.dispatch('setSongsOfTheWeekPage', { page: 'songs-of-the-week', id: this.$route.params.id })
   }
 }
 </script>

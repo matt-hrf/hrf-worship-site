@@ -16,12 +16,13 @@ const state = {
   dateNextSunday: null,
   dateCURLSunday: null,
   services: {},
-  arrangements: {}
+  arrangements: {},
+  songsOfTheWeekDate: null
 }
 const actions = {
   initialize ({ commit, state }) {
     // state.arrangements['rec82eUg59p3p9T8n'] = { fruit: 'banana' }
-    console.log('lodash check: ' + _.has(state.arrangements, 'rec82eUg59p3p9T8n'))
+    // console.log('lodash check: ' + _.has(state.arrangements, 'rec82eUg59p3p9T8n'))
     console.log('initializing...')
     // assign the important dates based around today
     commit('setDates')
@@ -45,16 +46,17 @@ const actions = {
     }).eachPage(function page (records, fetchNextPage) {
       // This function (`page`) will get called for each page of records.
       records.forEach(function (record) {
-        console.log('Retrieved', record.get('Name') + ', state: ' + state)
-        state.services[record.id] = record
+        // console.log('Retrieved', record.get('Name') + ', ' + record.id)
+        state.services[record.fields.UnixDate] = record
+        // console.log('adding a record to services: services[' + record.id + ']')
         // store arrangements that don't already exist in arrangements Object
         if (record.fields.Arrangements) {
           record.fields.Arrangements.forEach(function (arrangement) {
-            console.log(arrangementsToFetch.length + '. arrangement: ' + arrangement)
+            // console.log(arrangementsToFetch.length + '. arrangement: ' + arrangement)
             if (!_.has(state.arrangements, arrangement)) {
               arrangementsToFetch.push(arrangement)
             } else {
-              console.log(arrangement + ' arrangement already exists!')
+              // console.log(arrangement + ' arrangement already exists!')
             }
           })
         }
@@ -83,14 +85,14 @@ const actions = {
         }
       })
       fbf += ')'
-      console.log('fbf: ' + fbf)
+      // console.log('fbf: ' + fbf)
       base('Arrangements').select({
         view: 'Grid view',
         filterByFormula: fbf
       }).eachPage(function page (records, fetchNextPage) {
         // This function (`page`) will get called for each page of records.
         records.forEach(function (record) {
-          console.log('Retrieved', record.get('Name'))
+          // console.log('Retrieved', record.get('Name'))
           state.arrangements[record.id] = record
         })
         fetchNextPage()
@@ -106,14 +108,24 @@ const actions = {
       })
     })
   },
-  setCurrentSongPostDate ({ commit, state }, argObj) {
-    // console.log('setCurrentSongPostDate - postId: ' + argObj.postId)
-    commit('setCustomDate', { val: moment(new Date(argObj.postId.replace('-', ' '))).startOf('day') })
-    // commit('get')
-    console.log('state.count: ' + state.count)
-  },
-  setCurrentPagePost ({ commit }) {
-    console.log('setCurrentPagePost')
+  setSongsOfTheWeekPage ({ commit, state }, args) {
+    console.log('setPage: ' + args.page + ', ' + args.id)
+    if (args.id === 'next-week') {
+      // console.log('id: /songs-of-the-week/next-week')
+      state.songsOfTheWeekDate = state.dateNextSunday
+    } else if (args.id === 'this-week') {
+      console.log('id: /songs-of-the-week/this-week')
+      state.songsOfTheWeekDate = state.dateThisSunday
+    } else if (args.id === 'last-week') {
+      // console.log('id: /songs-of-the-week/last-week')
+      state.songsOfTheWeekDate = state.dateLastSunday
+    } else {
+      // console.log('id: /songs-of-the-week/june-17-2018')
+      state.songsOfTheWeekDate = moment(new Date(args.id.replace('-', ' '))).startOf('day')
+      /* if (!state.services[state.songsOfTheWeekDate]) {
+        console.log(state.songsOfTheWeekDate + ' doesn\'t exist, fetching...')
+      } */
+    }
   }
 }
 const mutations = {
@@ -138,7 +150,8 @@ const getters = {
   dateLastSunday: state => state.dateLastSunday,
   dateThisSunday: state => state.dateThisSunday,
   dateNextSunday: state => state.dateNextSunday,
-  dateCURLSunday: state => state.dateCURLSunday
+  dateCURLSunday: state => state.dateCURLSunday,
+  songsOfTheWeekDate: state => state.songsOfTheWeekDate
 }
 
 export default new Vuex.Store({
