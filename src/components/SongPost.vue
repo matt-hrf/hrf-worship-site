@@ -20,11 +20,11 @@
       </li>
     </ul>
 
-    <!-- <iframe v-if="songData.fields" width="560" height="315" v-bind:src="'https://www.youtube.com/embed/videoseries?list=' + songData.fields.YTPlaylistID" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <iframe v-if="services[Number(songsOfTheWeekDate)]" width="560" height="315" v-bind:src="'https://www.youtube.com/embed/videoseries?list=' + services[Number(songsOfTheWeekDate)].fields.YTPlaylistID" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-    <h1 v-if="songData.fields" class="title">
-      <span v-html="$options.filters.formatDate(songData.fields.Name)"></span>
-    </h1> -->
+    <h1 v-if="services[Number(songsOfTheWeekDate)]" class="title">
+      <span v-html="$options.filters.formatDate(services[Number(songsOfTheWeekDate)].fields.Name)"></span>
+    </h1>
 
     <p>Description for the week.</p>
     <p v-if="services[Number(songsOfTheWeekDate)]">
@@ -51,7 +51,7 @@
       </li>
     </ul>
 
-    <br><br>
+    <br>
     {{Number(songsOfTheWeekDate)}}
     <br><br>
     Wee: {{services[Number(songsOfTheWeekDate)]}}
