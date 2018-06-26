@@ -1,5 +1,7 @@
 <template>
   <div>
+
+    <!-- Last Week | This Week | Next Week
     <ul>
       <li style="display: inline-block;">
         <router-link :to="{ name: 'SongPost', params: { id:'last-week' } }">
@@ -19,6 +21,7 @@
         </router-link>
       </li>
     </ul>
+    -->
 
     <iframe v-if="services[Number(songsOfTheWeekDate)]" width="560" height="315" v-bind:src="'https://www.youtube.com/embed/videoseries?list=' + services[Number(songsOfTheWeekDate)].fields.YTPlaylistID" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
@@ -26,14 +29,13 @@
       <span v-html="$options.filters.formatDate(services[Number(songsOfTheWeekDate)].fields.Name)"></span>
     </h1>
 
-    <p>Description for the week.</p>
+    <!-- <p>Description for the week.</p> -->
     <p v-if="services[Number(songsOfTheWeekDate)]">
-      <a v-bind:href="'https://www.youtube.com/playlist?list=' + services[Number(songsOfTheWeekDate)].fields.YTPlaylistID" target="_blank">YouTube playlist</a>
+      <!-- <a v-bind:href="'https://www.youtube.com/playlist?list=' + services[Number(songsOfTheWeekDate)].fields.YTPlaylistID" target="_blank">YouTube playlist</a> -->
         <!-- |
       <a href="#">Spotify playlist</a> -->
     </p>
-    <p>Tags (themes): </p>
-    <br>
+    <!-- <p>Tags (themes): </p> -->
 
     <ul v-if="services[Number(songsOfTheWeekDate)]">
       <li
@@ -51,10 +53,13 @@
       </li>
     </ul>
 
-    <br>
-    {{Number(songsOfTheWeekDate)}}
-    <br><br>
-    Wee: {{services[Number(songsOfTheWeekDate)]}}
+    <div v-if="dev">
+      <br>
+      <b>Service Data for {{Number(songsOfTheWeekDate)}}</b>
+      <br>
+      {{services[Number(songsOfTheWeekDate)]}}
+    </div>
+
     <br><br><br>
 
   </div>
@@ -71,6 +76,7 @@ export default {
 
   data () {
     return {
+      dev: this.$route.query.dev
     }
   },
   filters: {

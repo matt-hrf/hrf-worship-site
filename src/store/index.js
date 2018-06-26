@@ -110,7 +110,9 @@ const actions = {
   },
   setSongsOfTheWeekPage ({ commit, state }, args) {
     console.log('setPage: ' + args.page + ', ' + args.id)
-    if (args.id === 'next-week') {
+    if (args.id === undefined) {
+      state.songsOfTheWeekDate = state.dateNextSunday
+    } else if (args.id === 'next-week') {
       // console.log('id: /songs-of-the-week/next-week')
       state.songsOfTheWeekDate = state.dateNextSunday
     } else if (args.id === 'this-week') {

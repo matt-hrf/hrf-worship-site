@@ -20,6 +20,14 @@ export default new Router({
       component: SongPost
     },
     {
+      path: '/songs-of-the-week/',
+      name: 'SongPost2',
+      component: SongPost,
+      props: (route) => ({
+        dev: route.query.dev
+      })
+    },
+    {
       path: '*',
       redirect: '/'
     }

@@ -1,14 +1,12 @@
 <template>
   <div>
-    <router-link :to="{ name: 'SongPost', params: { id: 'next-week' } }">Songs of the Week</router-link>
-
     <ul>
-      <li>Songs for the Week</li>
-      <li>Songs from last week</li>
+      <li><router-link :to="{ name: 'SongPost2' }">Songs of the Week</router-link></li>
+      <!-- <li>Songs from last week</li>
       <li>About HRF worship/vision</li>
       <li>Follow HRF on Spotify</li>
       <li>Follow HRF on YouTube</li>
-      <li>Recommended reading -> page</li>
+      <li>Recommended reading -> page</li> -->
     </ul>
   </div>
 </template>
